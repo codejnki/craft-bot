@@ -1,5 +1,7 @@
 # craft-bot
 
+[![.NET](https://github.com/codejnki/craft-bot/actions/workflows/dotnet.yml/badge.svg)](https://github.com/codejnki/craft-bot/actions/workflows/dotnet.yml)
+
 This is a Discord bot that is pretty dumb.  
 
 I'm using this mostly to learn the Discord API and make my wife laugh in the family server.
