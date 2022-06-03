@@ -1,0 +1,31 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: 6.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --no-restore
+    - name: Publish
+      run:  dotnet publish -c Release -r linux-x64 --self-contained true CraftBot.App
+    - name: Tar
+      run: tar -czvf craft-bot.linux-x64.tar.gz -C CraftBot.App/bin/Release/net6.0/linux-x64/publish .
+    - name: Upload Artifact
+      uses: actions/upload-artifacts@v3
+      with:
+        name: craft-bot-linux
+        path: craft-bot.linux-x64.tar.gz
