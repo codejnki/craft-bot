@@ -1,76 +1,58 @@
-﻿using CraftBot.App.Services;
-using Discord;
+using System.Reflection;
+using Autofac;
+using Autofac.Extensions.DependencyInjection;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Serilog;
 
-namespace CraftBot.App
+const string OUTPUT_TEMPLATE = "[{Timestamp:yyyy-MM-dd HH:mm:ss.fffzzz} {Level:u3}] {Message:lj}{NewLine}{Exception}";
+
+string? environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+IConfigurationRoot configuration = new ConfigurationBuilder()
+  .SetBasePath(Directory.GetCurrentDirectory())
+  .AddJsonFile("appsettings.json", true, true)
+  .AddJsonFile($"appsettings.{environment}.json", true, true)
+  .AddEnvironmentVariables()
+  .Build();
+
+Log.Logger = new LoggerConfiguration()
+  .ReadFrom.Configuration(configuration)
+  .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
+  .Enrich.FromLogContext()
+  .WriteTo.Async(a => a.Debug(outputTemplate: OUTPUT_TEMPLATE))
+  .WriteTo.Async(a =>
+    a.File("logs/craft-bot.log",
+      rollingInterval: RollingInterval.Day,
+      encoding: System.Text.Encoding.UTF8))
+  .WriteTo.Async(a => a.Console(outputTemplate: OUTPUT_TEMPLATE))
+  .CreateLogger();
+
+await Host.CreateDefaultBuilder(args)
+  .UseSerilog()
+  .UseServiceProviderFactory(new AutofacServiceProviderFactory())
+  .ConfigureContainer<ContainerBuilder>(ConfigureContainer)
+  .RunConsoleAsync();
+
+
+Log.CloseAndFlush();
+
+static void ConfigureContainer(ContainerBuilder containerBuilder)
 {
-  internal class Program
+  Assembly? assembly = Assembly.GetEntryAssembly();
+
+  if (assembly is not null)
   {
-
-    private static void Main(string[] args)
-    {
-      string? environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-      IConfigurationRoot configuration = new ConfigurationBuilder()
-        .SetBasePath(Directory.GetCurrentDirectory())
-        .AddJsonFile("appsettings.json", true, true)
-        .AddJsonFile($"appsettings.{environment}.json", true, true)
-        .AddEnvironmentVariables()
-        .Build();
-
-      Log.Logger = new LoggerConfiguration()
-        .ReadFrom.Configuration(configuration)
-        .WriteTo.File("logs/craft-bot.log", rollingInterval: RollingInterval.Day, encoding: System.Text.Encoding.UTF8)
-        .WriteTo.Console()
-        .CreateLogger();
-
-      new Program()
-          .MainAsync()
-          .GetAwaiter()
-          .GetResult();
-    }
-
-    public Program()
-    {
-
-    }
-
-    private async Task MainAsync()
-    {
-      var token = Environment.GetEnvironmentVariable("DISCORD_TOKEN");
-
-      if (string.IsNullOrEmpty(token))
-      {
-        throw new ArgumentNullException("No DISCORD_TOKEN value found");
-      }
-
-      using ServiceProvider services = ConfigureServices();
-      var client = services.GetRequiredService<DiscordSocketClient>();
-
-      services.GetRequiredService<LoggingService>();
-
-      await client.LoginAsync(TokenType.Bot, token);
-      await client.StartAsync();
-
-      services.GetRequiredService<MessageService>();
-
-      await Task.Delay(Timeout.Infinite);
-    }
-
-    private static ServiceProvider ConfigureServices()
-    {
-      IServiceCollection services = new ServiceCollection()
-        .AddSingleton<DiscordSocketClient>()
-        .AddSingleton<LoggingService>()
-        .AddSingleton<MessageService>()
-        .AddLogging(configure =>
-        {
-          _ = configure.AddSerilog();
-        });
-
-      return services.BuildServiceProvider();
-    }
+    _ = containerBuilder
+      .RegisterType<DiscordSocketClient>()
+        .As<DiscordSocketClient>()
+        .SingleInstance();
+    _ = containerBuilder.RegisterAssemblyTypes(assembly)
+        .As(t => t.GetInterfaces())
+        .SingleInstance();
+  }
+  else
+  {
+    throw new InvalidOperationException("Unable to get entry assembly.");
   }
 }
