@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace CraftBot.App.Services
 {
-  public class LoggingService
+  public class LoggingService : ILoggingService
   {
     private readonly ILogger _logger;
     private readonly DiscordSocketClient _discordSocketClient;
@@ -14,9 +14,6 @@ namespace CraftBot.App.Services
     {
       _logger = logger;
       _discordSocketClient = discordSocketClient;
-
-      _discordSocketClient.Ready += OnReadyAsync;
-      _discordSocketClient.Log += OnLogAsync;
     }
 
     public Task OnReadyAsync()

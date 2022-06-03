@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace CraftBot.App.Services
 {
-  public class MessageService
+  public class MessageService : IMessageService
   {
     private readonly ILogger<MessageService> _logger;
     private readonly DiscordSocketClient _discordSocketClient;
@@ -13,8 +13,6 @@ namespace CraftBot.App.Services
     {
       _logger = logger;
       _discordSocketClient = discordSocketClient;
-
-      _discordSocketClient.MessageReceived += MessageReceivedAsync;
     }
 
     public async Task MessageReceivedAsync(SocketMessage rawMessage)
@@ -24,18 +22,17 @@ namespace CraftBot.App.Services
         return;
       }
 
-      if (rawMessage.Content.ToLower().Contains("craft"))
+      if (rawMessage.Content.ToLowerInvariant().Contains("craft"))
       {
         _logger.LogDebug("Responding to channel: {channel}", rawMessage.Channel);
-        var msg = await rawMessage.Channel.SendMessageAsync("Did someone say craft?");
+        
+        var typing =  rawMessage.Channel.TriggerTypingAsync();
+        var msg = rawMessage.Channel.SendMessageAsync("Did someone say craft?", messageReference: rawMessage.Reference);
+        
         Emoji emoji = new("🍁");
-        await msg.AddReactionAsync(emoji);
-      }
 
-      if (rawMessage.Content.Equals("!ping"))
-      {
-        var cb = new ComponentBuilder().WithButton("Click-me!", "unique-id", ButtonStyle.Primary);
-        await rawMessage.Channel.SendMessageAsync("pong!", components: cb.Build());
+        await typing;
+        await Task.WhenAll(msg, msg.Result.AddReactionAsync(emoji));
       }
     }
   }
