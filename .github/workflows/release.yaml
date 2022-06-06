@@ -23,7 +23,7 @@ jobs:
     - name: Publish
       run:  dotnet publish -c Release -r linux-x64 --self-contained true CraftBot.App
     - name: Tar
-      run: tar -czvf craft-bot.linux-x64.tar.gz -C CraftBot.App/bin/Release/net6.0/linux-x64/publish .
+      run: tar -czvf craft-bot-linux-x64.tar.gz -C CraftBot.App/bin/Release/net6.0/linux-x64/publish .
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
@@ -44,9 +44,3 @@ jobs:
         asset_path: ./craft-bot-linux-x64.tar.gz
         asset_name: craft-bot-linux-x64.tar.gz
         asset_content_type: application/gzip
-
-    # - name: Upload Artifact
-    #   uses: actions/upload-artifact@v3
-    #   with:
-    #     name: craft-bot-linux-x64.tar.gz
-    #     path: craft-bot.linux-x64.tar.gz
