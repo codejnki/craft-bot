@@ -1,6 +1,6 @@
 # craft-bot
 
-[![.NET](https://github.com/codejnki/craft-bot/actions/workflows/dotnet.yml/badge.svg)](https://github.com/codejnki/craft-bot/actions/workflows/dotnet.yml)
+[![release](https://github.com/codejnki/craft-bot/actions/workflows/release.yaml/badge.svg)](https://github.com/codejnki/craft-bot/actions/workflows/release.yaml)
 
 This is a Discord bot that is pretty dumb.  
 
