@@ -6,6 +6,7 @@ namespace CraftBot.App.Services
   public class PublicModules : ModuleBase<SocketCommandContext>
   {
     [Command("ping")]
+    [Summary("Echos a pong")]
     [Alias("pong", "hello")]
     public Task PingAsync() => ReplyAsync("pong!");
 

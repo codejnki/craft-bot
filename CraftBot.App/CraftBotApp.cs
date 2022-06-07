@@ -16,6 +16,7 @@ namespace CraftBot.App
     private readonly DiscordSocketClient _discordClient;
     private readonly IMessageService _messageService;
     private readonly ILoggingService _loggingService;
+    private readonly ICommandHandlingService _commandHandlingService;
     private int _exitCode;
 
     public CraftBotApp(
@@ -23,13 +24,15 @@ namespace CraftBot.App
       IHostApplicationLifetime applicationLifetime,
       DiscordSocketClient discordClient,
       IMessageService messageService,
-      ILoggingService loggingService)
+      ILoggingService loggingService,
+      ICommandHandlingService commandHandlingService)
     {
       _logger = logger;
       _applicationLifetime = applicationLifetime;
       _discordClient = discordClient;
       _messageService = messageService;
       _loggingService = loggingService;
+      _commandHandlingService = commandHandlingService;
     }
 
 
@@ -52,12 +55,14 @@ namespace CraftBot.App
             await _discordClient.LoginAsync(TokenType.Bot, token);
 
             await _discordClient.StartAsync();
-            
-            
+
+
 
             _discordClient.Ready += _loggingService.OnReadyAsync;
             _discordClient.Log += _loggingService.OnLogAsync;
             _discordClient.MessageReceived += _messageService.MessageReceivedAsync;
+            _discordClient.MessageReceived += _commandHandlingService.MessageReceivedAsync;
+            await _commandHandlingService.InstallCommandsAsync();
 
             await Task.Delay(Timeout.Infinite);
           }

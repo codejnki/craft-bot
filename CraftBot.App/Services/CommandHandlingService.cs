@@ -1,10 +1,11 @@
+using System.Reflection;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 
 namespace CraftBot.App.Services
 {
-  public class CommandHandlingService
+  public class CommandHandlingService : ICommandHandlingService
   {
     private readonly CommandService _commandService;
     private readonly DiscordSocketClient _discordSocketClient;
@@ -17,9 +18,13 @@ namespace CraftBot.App.Services
     {
       _commandService = commandService;
       _discordSocketClient = discordSocketClient;
-      _serviceProvider = serviceProvider;
+      _serviceProvider = serviceProvider; // I hate this...we shouldn't be injecting the service provider
+    }
+
+    public async Task InstallCommandsAsync()
+    {
       _commandService.CommandExecuted += CommandExecutedAsync;
-      _discordSocketClient.MessageReceived += MessageReceivedAsync;
+      _ = await _commandService.AddModulesAsync(Assembly.GetEntryAssembly(), _serviceProvider);
     }
 
     public async Task MessageReceivedAsync(SocketMessage rawMessage)
@@ -30,14 +35,17 @@ namespace CraftBot.App.Services
         return;
       }
 
-      var argPos = 0;
-      if (!message.HasCharPrefix('!', ref argPos))
+      int argPos = 0;
+      if (!message.HasCharPrefix('~', ref argPos))
       {
         return;
       }
 
+      var typing = rawMessage.Channel.TriggerTypingAsync();
       var context = new SocketCommandContext(_discordSocketClient, message);
-      await _commandService.ExecuteAsync(context, argPos, _serviceProvider);
+      var command = _commandService.ExecuteAsync(context, argPos, _serviceProvider);
+
+      await Task.WhenAll(typing, command);
     }
 
     public async Task CommandExecutedAsync(Optional<CommandInfo> command, ICommandContext context, IResult result)
@@ -52,7 +60,7 @@ namespace CraftBot.App.Services
         return;
       }
 
-      await context.Channel.SendMessageAsync($"error: {result}");
+      _ = await context.Channel.SendMessageAsync($"error: {result}");
     }
 
   }
