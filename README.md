@@ -26,3 +26,23 @@ Eventually if I keep going with this I will figure out how to make this a lot sm
 ## History
 
 I originally wrote `craft-bot` using the Python Discord client.  But Python isn't my strongest skill set, and I was getting annoyed by dev workflow related things.  So I rewrote it using C#.
+
+## Commands
+
+### Lurk
+
+The primary role of `Craft Bot` is to lurk in your channels and provide snarky replies based on seeing keywords in the chat text.  A lurk reply can be constructed of both a text phrase to reply with, and an Emoji to add to the bot reply.  (I told you this bot was dumb right?)
+
+As of version `v0.0.5` the lurks are not saved through app restart.  I expect to have that functionality working by version `v0.0.6`.
+
+`~lurk list`
+
+This will `lurk list` all of the lurks that are currently configured.  The lurks will be listed back to you in the format `key-word|reply-text|emoji`.
+
+`~lurk add {key-word} "{reply-text}" {emoji}`
+
+The `lurk add` command will add a new lurk to Craft Bot's list of lurks to look out for.  The `{emoji}` is optional.
+
+`~lurk del {key-word}`
+
+Use `lurk del` command to delete a lurk from Craft Bot's watch list.

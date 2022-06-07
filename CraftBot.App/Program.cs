@@ -1,6 +1,7 @@
 using System.Reflection;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -47,6 +48,10 @@ static void ConfigureContainer(ContainerBuilder containerBuilder)
       .RegisterType<DiscordSocketClient>()
         .As<DiscordSocketClient>()
         .SingleInstance();
+    _ = containerBuilder
+          .RegisterType<CommandService>()
+          .As<CommandService>()
+          .SingleInstance();
     _ = containerBuilder.RegisterAssemblyTypes(assembly)
         .As(t => t.GetInterfaces())
         .SingleInstance();

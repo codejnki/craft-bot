@@ -8,11 +8,16 @@ namespace CraftBot.App.Services
   {
     private readonly ILogger<MessageService> _logger;
     private readonly DiscordSocketClient _discordSocketClient;
+    private readonly ILurkService _lurkService;
 
-    public MessageService(ILogger<MessageService> logger, DiscordSocketClient discordSocketClient)
+    public MessageService(
+      ILogger<MessageService> logger,
+      DiscordSocketClient discordSocketClient,
+      ILurkService lurkService)
     {
       _logger = logger;
       _discordSocketClient = discordSocketClient;
+      _lurkService = lurkService;
     }
 
     public async Task MessageReceivedAsync(SocketMessage rawMessage)
@@ -22,17 +27,24 @@ namespace CraftBot.App.Services
         return;
       }
 
-      if (rawMessage.Content.ToLowerInvariant().Contains("craft"))
-      {
-        _logger.LogDebug("Responding to channel: {channel}", rawMessage.Channel);
-        
-        var typing =  rawMessage.Channel.TriggerTypingAsync();
-        var msg = rawMessage.Channel.SendMessageAsync("Did someone say craft?", messageReference: rawMessage.Reference);
-        
-        Emoji emoji = new("🍁");
+      var lurkReply = await _lurkService.LurkChannel(rawMessage.Content);
 
-        await typing;
-        await Task.WhenAll(msg, msg.Result.AddReactionAsync(emoji));
+      if (lurkReply is not null)
+      {
+        var tasks = new List<Task>();
+        _logger.LogDebug("Responding to channel: {channel}", rawMessage.Channel);
+
+        tasks.Add(rawMessage.Channel.TriggerTypingAsync());
+
+        var msg = rawMessage.Channel.SendMessageAsync(lurkReply.ReplyText, messageReference: rawMessage.Reference);
+        tasks.Add(msg);
+        
+        if (lurkReply.ReplyEmoji is not null) 
+        {
+          tasks.Add(msg.Result.AddReactionAsync(lurkReply.ReplyEmoji));
+        }
+
+        await Task.WhenAll(tasks);
       }
     }
   }
