@@ -1,4 +1,3 @@
-using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
 
@@ -38,8 +37,8 @@ namespace CraftBot.App.Services
 
         var msg = rawMessage.Channel.SendMessageAsync(lurkReply.ReplyText, messageReference: rawMessage.Reference);
         tasks.Add(msg);
-        
-        if (lurkReply.ReplyEmoji is not null) 
+
+        if (lurkReply.ReplyEmoji is not null)
         {
           tasks.Add(msg.Result.AddReactionAsync(lurkReply.ReplyEmoji));
         }

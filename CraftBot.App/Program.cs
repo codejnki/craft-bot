@@ -1,9 +1,11 @@
 using System.Reflection;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using CraftBot.App.Models;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 
@@ -22,10 +24,6 @@ Log.Logger = new LoggerConfiguration()
   .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
   .Enrich.FromLogContext()
   .WriteTo.Async(a => a.Debug(outputTemplate: OUTPUT_TEMPLATE))
-  .WriteTo.Async(a =>
-    a.File("logs/craft-bot.log",
-      rollingInterval: RollingInterval.Day,
-      encoding: System.Text.Encoding.UTF8))
   .WriteTo.Async(a => a.Console(outputTemplate: OUTPUT_TEMPLATE))
   .CreateLogger();
 
@@ -33,6 +31,7 @@ await Host.CreateDefaultBuilder(args)
   .UseSerilog()
   .UseServiceProviderFactory(new AutofacServiceProviderFactory())
   .ConfigureContainer<ContainerBuilder>(ConfigureContainer)
+  .ConfigureServices(services => ConfigureServices(services, configuration))
   .RunConsoleAsync();
 
 
@@ -60,4 +59,12 @@ static void ConfigureContainer(ContainerBuilder containerBuilder)
   {
     throw new InvalidOperationException("Unable to get entry assembly.");
   }
+}
+
+static void ConfigureServices(IServiceCollection services, IConfiguration configuration) 
+{
+  Console.WriteLine("Configure Services called");
+  var craftBotSettings = new CraftBotSettings();
+  configuration.GetSection("CraftBotSettings").Bind(craftBotSettings);
+  services.AddSingleton(craftBotSettings);
 }

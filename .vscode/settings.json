@@ -1,4 +1,11 @@
 {
   "editor.formatOnSave": true,
-  "cSpell.words": ["appsettings", "ASPNETCORE", "dotnetcore", "Serilog"]
+  "cSpell.words": [
+    "appsettings",
+    "ASPNETCORE",
+    "craftbot",
+    "dotnetcore",
+    "Newtonsoft",
+    "Serilog"
+  ]
 }
