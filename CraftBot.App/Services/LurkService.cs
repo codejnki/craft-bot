@@ -6,23 +6,26 @@ namespace CraftBot.App.Services
   {
 
     private readonly Dictionary<string, LurkReply> _lurkDictionary = new();
+    private readonly ILurkLoader _lurkLoader;
 
-    public LurkService()
+    public LurkService(ILurkLoader lurkLoader)
     {
-      _lurkDictionary["craft"] = new LurkReply("Did somebody say craft?", "🍁");
-      _lurkDictionary["foo"] = new LurkReply("Foo you buddy", "😒");
+
+      _lurkLoader = lurkLoader;
+
+      _lurkDictionary = _lurkLoader.LoadLurkList();
     }
 
-    public Task AddLurk(string lurkKey, LurkReply lurkReply)
+    public async Task AddLurk(string lurkKey, LurkReply lurkReply)
     {
       _lurkDictionary.Add(lurkKey, lurkReply);
-      return Task.CompletedTask;
+      await _lurkLoader.SaveLurkList(_lurkDictionary);
     }
 
-    public Task DeleteLurk(string lurkKey)
+    public async Task DeleteLurk(string lurkKey)
     {
       _lurkDictionary.Remove(lurkKey);
-      return Task.CompletedTask;
+      await _lurkLoader.SaveLurkList(_lurkDictionary);
     }
 
     public Task<LurkReply> LurkChannel(string messageContent)

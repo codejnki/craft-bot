@@ -1,4 +1,5 @@
 using Discord;
+using Newtonsoft.Json;
 
 namespace CraftBot.App.Models
 {
@@ -6,15 +7,16 @@ namespace CraftBot.App.Models
   {
     public string ReplyText { get; set; }
 
-    public Emoji ReplyEmoji { get; set; }
+    // TODO: This is hacky, figure out a cleaner way to handle this
+    [JsonIgnore]
+    public Emoji ReplyEmoji => new(ReplyEmojiText);
 
-    public LurkReply(string replyText, string replyEmoji)
+    public string ReplyEmojiText { get; set; }
+
+    public LurkReply(string replyText, string replyEmojiText)
     {
       ReplyText = replyText;
-
-      if (!string.IsNullOrEmpty(replyEmoji)) {
-        ReplyEmoji = new Emoji(replyEmoji);
-      }
+      ReplyEmojiText = replyEmojiText;
     }
   }
 }
